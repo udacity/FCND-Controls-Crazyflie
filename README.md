@@ -113,9 +113,9 @@ Now that we have made a working outer loop controller that is successfully able 
 
 While the entire inner loop will be tested at once, we will build it in two steps:
 
- - 1. compute attitude commands from the horizontal velocity command
+ 1. compute attitude commands from the horizontal velocity command
 
- - 2. compute the thrust command (total thrust) from the vertical velocity command
+ 2. compute the thrust command (total thrust) from the vertical velocity command
 
 ### Attitude ###
 

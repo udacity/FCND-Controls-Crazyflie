@@ -44,24 +44,17 @@ In this first step, we will be building an altitude controller to the level of c
 Much like in the project, we will create a PID controller on the altitude to command velocity, so the resulting command should look like the first step of your altitude controller from the controls project:
 
 ```python
-def altitude_controller(self, alt_desired, alt):
-    # TODO: make this a copy of the real code
-    hdot_cmd = self.kp_alt * (alt_desired - alt)
+def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
+    hdot_cmd += self.kp_alt * (alt_cmd - alt)  # compute desired vertical velocity from altitude error
+    hdot_cmd = np.clip(hdot_cmd, -self._hdot_max, self._hdot_max)  # saturate as desired
     return hdot_cmd
 ```
 
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
-Recall from the controls project it can be nice to saturate your commands when you can to make sure that you don't exceed some thresholds, either performance thresholds or safety ones.
+And that's it!  Now to choose a gain and see what happens (see below for chosing a gain TODO: link to section below)!
 
-```python
-# TODO: code to saturate the command
-```
-
-And that's it!  Now to choose a gain and see what happens!
-
-**For an example script of just the altitude controller working to maintain altitude, check out the `script name here` script in the `repo name here` repository on github.**
-
+**For an example script of just the altitude controller working to maintain altitude, check out the `script name here`.**
 
 
 ### Lateral Position Controller ###
@@ -69,23 +62,16 @@ And that's it!  Now to choose a gain and see what happens!
 Now that we have our altitude controller, let's handle the lateral position.  Once again we will be using a PID controller on the position, so it will be the first (TODO: check how many lines) line of the controller you made for the controls project:
 
 ```python
-def lateral_position_controller(self, pos_desired, pos):
-    # TODO make this a copy of the real code
-    vel_cmd = self.kp_pos * (pos_desired - pos)
-    ...
+def lateral_position_control(self, pos_cmd, pos, vel_cmd=np.array([0.0, 0.0, 0.0])):
+    vel_cmd += self._kp_pos * (pos_cmd[0:2] - pos[0:2])  # compute lateral velocity command from position error
+    vel_cmd = np.clip(vel_cmd, -self._v_max, self._v_max)  # saturate as desired
     return vel_cmd
 
 ```
 
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
-Once again we can saturate the velocity commands as desired:
-
-```python
-# TODO: add code for saturating the command, for both altitude and lateral position
-```
-
-And that's it!  Now we just need to choose a starting gain and see how it works...
+And that's it!  Now we just need to choose a starting gain and see how it works (TODO: link to section below).
 
 ### Break: An Aside on Gain Selection ###
 
@@ -140,15 +126,15 @@ We have already generated a velocity command for our position error, so let's bu
 ```python
 def velocity_controller(self, vel_cmd, vel):
 
-    # TODO: make this actually what controller will be.
+    pitch = -self._kp_vel * (vel_cmd[0] - vel[0])  # note the sign change!  Remember + pitch is up, meaning it will send out drone backwards!
+    roll = self._kp_vel * (vel_cmd[1] - vel[0])
 
-    pitch_cmd = -KpVelN * (vel_cmd[0] - vel[0])  # note the sign change - since + pitch is upwards, which would send us backwards, not forwards
-    roll_cmd = KpVelE * (vel_cmd[1] - vel[1])
+    # add some limits
+    pitch_cmd = np.clip(pitch, -self._bank_max, self._bank_max)
+    roll_cmd = np.clip(roll, -self._bank_max, self._bank_max)
 
     ...
 ```
-
-TODO: Once again we will saturate our roll and pitch commands to make sure they don't get too extreme.
 
 ### Thrust ###
 
@@ -159,17 +145,17 @@ Instead of true thrust, we will need to send a normalized thrust command, that i
 So let's again use the same process as the controls project to compute the thrust:
 
 ```python
-
 def velocity_controller(self, vel_cmd, vel)
     ...
 
-    accel_cmd = np.clip(accel_cmd, -self._haccel_max, self._haccel_max)
-    thrust_cmd_N = DRONE_M * (accel_cmd + GRAVITY_MAG) / (np.cos(pitch_cmd) * np.cos(roll_cmd))
+    accel_cmd = self._kp_hdot * (hdot_cmd - hdot)  # compute acceleration from vertical velocity error
+    accel_cmd = np.clip(accel_cmd, -self._haccel_max, self._haccel_max)  # saturate as desired
+    thrust_cmd_N = DRONE_M * (accel_cmd + GRAVITY_MAG) / (np.cos(pitch_cmd) * np.cos(roll_cmd))  # compute thrust in N positive up
 
-    thrust_cmd = thrust_cmd_N / MAX_THRUST
+    # need to normalize the thrust
+    thrust_cmd = thrust_cmd_N / MAX_THRUST_N
 
     return pitch_cmd, roll_cmd, thrust_cmd
-
 ```
 
 

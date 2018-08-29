@@ -98,7 +98,7 @@ Now let's say we set `KpPos = 10`, let's take a look at what it means:
 
 Do you think that the crazyflie will be able to stop without overshooting if it's still flying at 5 m/s when it's 0.5 meters away from the target position?
     
-    If the crazyflie could respond immediately to commands and instantaneously change its velocity vector, then yes, this would be possible, but alas, in the real world, we have delays, it takes some time to change velocity (and attitude), which results in needing to tune our controller.  Different drones will be able to react at different rates, allowing for much more aggressive control on some drones versus others.
+ > If the crazyflie could respond immediately to commands and instantaneously change its velocity vector, then yes, this would be possible, but alas, in the real world, we have delays, it takes some time to change velocity (and attitude), which results in needing to tune our controller.  Different drones will be able to react at different rates, allowing for much more aggressive control on some drones versus others.
 
 Do you think you could approach the target position faster than 0.25 m/s when 5 meters out?
 

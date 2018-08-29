@@ -33,8 +33,11 @@ target format:
  - a script file for each of the specific cases below???
  - a script file for the students as a starting point????
 
+## Outer Loop Controller ##
 
-## Altitude Controller ##
+The outer loop controller will be built in 2 steps, first we will build the altitude controller and then we will build the lateral position controller.  Each of these can be run and tested separately to make the building and tuning processes easier.
+
+### Altitude Controller ###
 
 In this first step, we will be building an altitude controller to the level of commanding velocities.  Later on we will continue to develop the altitude controller to compute thrust itself, but for now we will stop at vertical velocity as the crazyflie allows us to control this directly.
 
@@ -61,7 +64,7 @@ And that's it!  Now to choose a gain and see what happens!
 
 
 
-## Lateral Position Controller ##
+### Lateral Position Controller ###
 
 Now that we have our altitude controller, let's handle the lateral position.  Once again we will be using a PID controller on the position, so it will be the first (TODO: check how many lines) line of the controller you made for the controls project:
 
@@ -84,16 +87,7 @@ Once again we can saturate the velocity commands as desired:
 
 And that's it!  Now we just need to choose a starting gain and see how it works...
 
-### Running Lateral Position Controller ###
-
-There are two ways that the lateral position controller can be run:
-
- 1. letting the crazyflie control the altitude - see TODO: add script name -> NOT POSSIBLEE
-
- 2. running both altitude and lateral position controllers - see TODO: add script name
-
-
-## Break: An Aside on Gain Selection ##
+### Break: An Aside on Gain Selection ###
 
 Now that you've coded up your controller, it's time to pick some initial gains and see how it works.  For the course, we knew the exact properties of our drone in the simulator, allowing us to calculate some initial gains mathematically, but here, that's not so much the case.  So let's see if we can build some intuition and do some back of the envelope calculation to decide on some gains.
 
@@ -127,7 +121,17 @@ These are the questions that you should be asking yourself as you choose an init
 
 So to build some of our intuition, we can see that setting the max speed value allows us to have very aggressive control without the proportional speed increase when `pos_error >> 0`.
 
-## Velocity Controller ##
+## Inner Loop Controller ##
+
+Now that we have made a working outer loop controller that is successfully able to fly the crazyflie using velocity commands, let's build an inner loop controller that will take those velocity commands and generate attitude/thrust commands to control the crazyflie.
+
+While the entire inner loop will be tested at once, we will build it in two steps:
+
+ - 1. compute attitude commands from the horizontal velocity command
+
+ - 2. compute the thrust command (total thrust) from the vertical velocity command
+
+### Attitude ###
 
 Now that you've written a controller commanding velocity, let's go one step further and command attitude.  You may be thinking "why would I want to command attitude, when commanding a velocity gives me a good enough position controller!"  And you would be right in thinking that!  If your goal is solely to command a position in space and you have a drone that can do accurate velocity commands, then you may find you don't need to go this far.  But, what if you want to be able to not just go from point A to point B, but do so with specific orientations in space?  For example, what if you wanted to go through a window and you knew you needed to be perfectly level going through the window, or more interestingly, at a specific angle?  This starts to go into the realm of flying specific trajectories, which we will get to a little later, but provides a little insight as to why you might end up commanding at this level if you do have velocity commands at your disposal.  (Remember there is always the case where your drone only supports attitude commands!)
 
@@ -146,7 +150,7 @@ def velocity_controller(self, vel_cmd, vel):
 
 TODO: Once again we will saturate our roll and pitch commands to make sure they don't get too extreme.
 
-### Updating Altitude Controller ###
+### Thrust ###
 
 Now that we've moved on to sending attitude commands, we also need to update our altitude controller to send thrust commands instead of velocity commands.  In the controls project, the altitude controller computed all the way to thrust, but for the crazyflie, we will have this level of control done in our velocity controller.
 
@@ -180,29 +184,53 @@ Again we can see that maybe starting with a smaller value (around XXX) may be a 
 
 **It is worth mentioning that in both of these cases there really wasn't such a thing as too small of a value, worse case your crazyflie was just not going anywhere but it still stayed airborne.  When it comes to lower level control loops, for example an attitude controller that is responsible for keeping your drone level, you will start seeing cases where you can have a gain that is too low and results in your drone falling out of the sky!**
 
+## Flying Trajectories ##
+
+Now that we have a controller and it is flying simply waypoint missions, let's look at extending it to flying trajectories.
+
+For this, we have provided a framework for reading in a trajectory file (see below for the file format) and a sample figure 8 trajectory.
+
+See how well your controller flies through the trajectory!  You may find that you might need some additional tuning or changing of your velocity limits in order to fly the trajectory the best.
 
 
-## Attitude Commands Version 2 ##
+### Trajectory File Format ###
 
-In the previous section we built our attitude command with a cascaded controller, but I wanted to bring up the idea that a different structure would also work for this, specifically:
+A trajectory file, as currently defined by the handler class, is a text file with each line being a trajectory point.  Each line contains the following 4 pieces of information as comma separated values:
+
+ - relative time (in flight time in [s])
+ - north position (in [m])
+ - east position (in [m])
+ - down position (in [m])
+
+
+### Further Challenges ###
+
+We've provided you with one simple trajectory that you can feel free to try out, but now it is up to you to explore the limits that you can take your crazyflie!
+
+For those of you who are ambitious, here are some ideas of how you might be able to extend the code provided:
+
+ - **Create your own trajectory files.**  How quickly can you get your crazyflie to fly a given trajectory?  How tight of turns, or how complex of trajectories can your controller handle?
+
+ - **Add attitude information to trajectory.**  Extend the trajectory handler and the file format to include attitude to each trajectory point.  Can you successfully achieve specific attitudes at specific times during the flight?
+
+
+
+## Single Controller Option ##
+
+In the previous two parts, we built our controller as an outer loop computing velocity commands from position information and an inner loop computing attitude/thrust commands from velocity information.  This was the same approach that was used in the controls project.
+
+Here we will just introduce the idea of a different structure to the controller.  We have not provided example code for this structure, this is food for thought for those of you who want to explore other control structures and see how they might behave differently on a real platform.
+
+Instead of building it as two parts, it is possible to build the entire controller as one piece:
 
 ```python
-attitude_cmd = KpPos * (pos_error) + KpVel * (vel_error)
+attitude_cmd = KpPos * (pos_cmd - pos) + KpVel * (vel_cmd - vel)
 ```
 
-In this case, with `vel_error = 0 - vel` (or `vel_cmd - vel` if flying a trajectory).  This means that we are constantly damping our control based on how fast we are currently traveling.  This structure ends up being a little more like a PD controller on position, but we are still directly measuring velocity instead of differentiating position.  Note that with this structure, we can't directly limit the velocity command that is created, we can only limit the attitude command.
+If we are not flying a trajectory, we set `vel_cmd = 0`, which means that we are constatly damping our control based on how fast we are currently traveling.  This structure ends up being a little more like a PD controller on position, but we are still directly measuring velocity instead of differentiating position.  Note that with this structure, we can't directly limit the velocity command that is created, we can only limit the attitude command.
 
 For this one, we won't be walking through what the solution looks like directly, but rather leaving it up to you to play around with the controller and see what happens!
 
 For those who are very ambitious, can you think of different control structures you could use?  The crazyflie can be quite forgiving, so give it a try and see how it works out!
 
 
-## Flying Trajectories ##
-
-Now that you have two different types of controllers to play around with, start to explore the idea of flying specific trajectories.  Can you fly not just a set of waypoints, but maybe a trajectory that commands specific velocities along the way?  Maybe something like the figure 8 that was flown in simulation?  How about holding specific attitudes along the way?
-
-In the `controller.py` file, you will see we've set up a couple of functions that are designed to read in trajectory files structured as follows:
-
-TODO: decide on a trajectory file structure.
-
-We've provided you with one simple trajectory that you can feel free to try out, but now it is up to you to explore the limits that you can take your crazyflie!

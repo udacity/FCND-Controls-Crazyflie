@@ -85,21 +85,18 @@ And that's it!  Now we just need to choose a starting gain and see how it works 
 
 Now that you've coded up your controller, it's time to pick some initial gains and see how it works.  For the course, we knew the exact properties of our drone in the simulator, allowing us to calculate some initial gains mathematically, but here, that's not so much the case.  So let's see if we can build some intuition and do some back of the envelope calculation to decide on some gains.
 
-First things first, let's make sure we don't ever try and go too fast and add a limit on the allowable velocity command.  Let's keep things nice and slow and limit the velocity to 1 m/s (TODO: decide on good starting limit here).
+First things first, let's make sure we don't ever try and go too fast and add a limit on the allowable velocity command.  Let's keep things nice and slow and limit the velocity to 0.3 m/s.
 
-As a recap, our controller is calculating the position error (how far we are from where we'd like to be) and multiplying that by our gain `KpPos` to generate a velocity command.  In general, when we are far away from our target position (`pos_error >> 0`), we'd like to approach it at our max velocity, so let's not worry about that case since we've added a mechanism to limit our velocity command to a max velocity.  What really starts to come in to play here is at what distance do you want to start slowing down.
+As a recap, our controller is calculating the position error (how far we are from where we'd like to be) and multiplying that by our gain (`self._kp_pos` and `self._kp_alt`) to generate a velocity command.  In general, when we are far away from our target position (`pos_error >> 0`), we'd like to approach it at our max velocity, so let's not worry about that case since we've added a mechanism to limit our velocity command to a max velocity.  What really starts to come in to play here is at what distance do you want to start slowing down.  The easiest way to start making these decisions is looking at examples, so let's make up a few.
 
-For example, let's say we have a max velocity of 1 m/s and we set `KpPos = 0.5`.  That means that anything further than 2 meters from our target, we will be flying at max speed, and once we are within 2 meters we will be slowing down until we finally reach the waypoint.
-
-
-For example, let's say we set `KpPos = 0.5`, let's take a look at what it means for our crazyflie's velocity profile as it approaches the waypoint:
+For example, let's set our max velocity to 1 m/s and set `_kp_pos = 0.5`, let's take a look at what it means for our crazyflie's velocity profile as it approaches the waypoint:
 
  - at 1 meter away, we will be flying 0.5 m/s
  - at 0.5 meters away, we will be flying at 0.25 m/s
 
 TODO: add plot with several different gain values to illustrate the velocity profile as we approach the waypoint.
 
-Now let's say we set `KpPos = 10`, let's take a look at what it means:
+Now let's say we set `_kp_pos = 10`, let's take a look at what it means:
 
  - at 1 meter away, we will be flying at 10 m/s (or max velocity)
  - at 0.5 meters away, we will be flying at 5 m/s (or max velocity)
@@ -108,12 +105,11 @@ Do you think that the crazyflie will be able to stop without overshooting if it'
     
  > If the crazyflie could respond immediately to commands and instantaneously change its velocity vector, then yes, this would be possible, but alas, in the real world, we have delays, it takes some time to change velocity (and attitude), which results in needing to tune our controller.  Different drones will be able to react at different rates, allowing for much more aggressive control on some drones versus others.
 
-Do you think you could approach the target position faster than 0.25 m/s when 5 meters out?
+Do you think you could approach the target position faster than 0.25 m/s when 0.5 meters out?
 
-These are the questions that you should be asking yourself as you choose an initial set of gains to work with for your controller.  You always want to err on the side of caution and go with the option that gives you room to increase your gain to get better performance rather than have to decrease your gain.
+These are the questions that you should be asking yourself as you choose an initial set of gains to work with for your controller.  You shoudl err on the side of caution and go with the option that gives you room to increase your gain to get better performance rather than have to decrease your gain.
 
-
-So to build some of our intuition, we can see that setting the max speed value allows us to have very aggressive control without the proportional speed increase when `pos_error >> 0`.
+As a last part to build some of our intution, we can see that setting the max speed value allows us to have very aggressive control without the proportional, potentially impossibly high, speed increase when `pos_error >> 0`.
 
 ## Inner Loop Controller ##
 
@@ -168,7 +164,6 @@ def velocity_controller(self, vel_cmd, vel)
 We are commanding attitude in radians so this is a little harder intuitively, but let's for a moment pretend we are working with degrees (and then we will adjust for the fact that we did our back of the envelope calculation in degrees).
 
 Once again, let's look at what the attitude command profile looks like as our velocity error changes:
-
 
 Again we can see that maybe starting with a smaller value (around XXX) may be a safer bet than starting with too large of a value.
 

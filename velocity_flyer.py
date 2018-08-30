@@ -23,15 +23,15 @@ from udacidrone.messaging import MsgID
 from outer_controller import OuterLoopController
 
 
-# NOTE: a waypoint is defined as [North, East, Altitude]
+# NOTE: a waypoint is defined as [North, East, Down]
 
 ###### EXAMPLES ######
 #
 # here are a set of example waypoint sets that you might find useful for testing.
 # each has a bit of a description to help with the potential use case for the waypoint set.
 #
-# RECALL: the waypoint lists are defined as a list of lists, which each entry in a list of the
-# [North, East, Altitude] to command.  Also recall for the crazyflie, North and East are defined
+# NOTE: the waypoint lists are defined as a list of lists, which each entry in a list of the
+# [North, East, Down] to command.  Also recall for the crazyflie, North and East are defined
 # by the starting position of the drone (straight and left, respectively), not world frame North
 # and East.
 #
@@ -44,7 +44,7 @@ from outer_controller import OuterLoopController
 # in `local_position_callback`) to ensure that the crazyflie attempts to hold this position.
 ######
 
-WAYPOINT_LIST = [[0.0, 0.0, 0.5]]
+WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
 
 
 ######
@@ -54,8 +54,8 @@ WAYPOINT_LIST = [[0.0, 0.0, 0.5]]
 ######
 
 # WAYPOINT_LIST = [
-#     [1.5, 0.0, 0.5],
-#     [0.0, 0.0, 0.5]
+#     [1.5, 0.0, -0.5],
+#     [0.0, 0.0, -0.5]
 #     ]
 
 
@@ -66,10 +66,10 @@ WAYPOINT_LIST = [[0.0, 0.0, 0.5]]
 ######
 
 # WAYPOINT_LIST = [
-#     [1.0, 0.0, 0.5],
-#     [1.0, 1.0, 0.5],
-#     [0.0, 1.0, 0.5],
-#     [0.0, 0.0, 0.5]
+#     [1.0, 0.0, -0.5],
+#     [1.0, 1.0, -0.5],
+#     [0.0, 1.0, -0.5],
+#     [0.0, 0.0, -0.5]
 #     ]
 
 
@@ -90,7 +90,7 @@ class VelocityFlyer(Drone):
 
     def __init__(self, connection):
         super().__init__(connection)
-        self._target_position = np.array([0.0, 0.0, 0.0])
+        self._target_position = np.array([0.0, 0.0, 0.0])  # [North, East, Down]
         self._all_waypoints = []
         self._in_mission = True
 
@@ -107,7 +107,7 @@ class VelocityFlyer(Drone):
 
     def local_position_callback(self):
         if self._flight_state == States.TAKEOFF:
-            if -1.0 * self.local_position[2] > 0.95 * self._target_position[2]:
+            if -1.0 * self.local_position[2] > -0.95 * self._target_position[2]:
                 self._all_waypoints = self.calculate_box()
                 self.waypoint_transition()
 
@@ -190,7 +190,7 @@ class VelocityFlyer(Drone):
         """
 
         lateral_vel_cmd = self._outer_controller.lateral_position_control(self._target_position, self.local_position)
-        hdot_cmd = self._outer_controller.altitude_control(self._target_position[2], -self.local_position[2])  # TODO: check the signs here
+        hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])  # TODO: check the signs here
 
         return np.array([lateral_vel_cmd[0], lateral_vel_cmd[1], -hdot_cmd])
 

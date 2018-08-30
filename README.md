@@ -70,10 +70,11 @@ And that's it!  Now to choose a gain and see what happens (see below for chosing
 Now that we have our altitude controller, let's handle the lateral position.  Once again we will be using a PID controller on the position, so it will be the first (TODO: check how many lines) line of the controller you made for the controls project:
 
 ```python
-def lateral_position_control(self, pos_cmd, pos, vel_cmd=np.array([0.0, 0.0, 0.0])):
-    vel_cmd += self._kp_pos * (pos_cmd[0:2] - pos[0:2])  # compute lateral velocity command from position error
-    vel_cmd = np.clip(vel_cmd, -self._v_max, self._v_max)  # saturate as desired
-    return vel_cmd
+def lateral_position_control(self, pos_cmd, pos, vel_cmd):
+
+    lateral_vel_cmd = self._kp_pos * (pos_cmd[0:2] - pos[0:2]) + vel_cmd[0:2]  # compute lateral velocity command from position error
+    lateral_vel_cmd = np.clip(lateral_vel_cmd, -self._v_max, self._v_max)  # saturate as desired
+    return lateral_vel_cmd
 
 ```
 

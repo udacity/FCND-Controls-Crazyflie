@@ -12,7 +12,8 @@ TODO: add examples of how this class can be run
 import argparse
 import time
 from enum import Enum
-
+import signal
+import sys
 import numpy as np
 
 from udacidrone import Drone
@@ -91,6 +92,7 @@ class VelocityFlyer(Drone):
     def __init__(self, connection):
         super().__init__(connection)
         self._target_position = np.array([0.0, 0.0, 0.0])  # [North, East, Down]
+        self._target_velocity = np.array([0.0, 0.0, 0.0])  # [Vn, Ve, Vd]
         self._all_waypoints = []
         self._in_mission = True
 
@@ -124,9 +126,9 @@ class VelocityFlyer(Drone):
         elif self._flight_state == States.WAYPOINT:
 
             # DEBUG
-            # print("curr pos: ({0:.2f}, {0:.2f}, {0:.2f}), desired pos: ({0:.2f}, {0:.2f}, {0:.2f})".format(
-            #     self.local_position[0], self.local_position[1], self.local_position[2],
-            #     self._target_position[0], self._target_position[1], self._target_position[2]))
+            print("curr pos: ({:.2f}, {:.2f}, {:.2f}), desired pos: ({:.2f}, {:.2f}, {:.2f})".format(
+                self.local_position[0], self.local_position[1], self.local_position[2],
+                self._target_position[0], self._target_position[1], self._target_position[2]))
 
 
             ########################### Waypoint Incrementing Block ################################
@@ -141,6 +143,9 @@ class VelocityFlyer(Drone):
 
             # run the outer loop controller (position controller -> to velocity command)
             vel_cmd = self.run_outer_controller()
+
+            # DEBUG
+            print("vel cmd: ({:.2f}, {:.2f}, {:.2f})".format(vel_cmd[0], vel_cmd[1], vel_cmd[2]))
 
             # send the velocity command to the drone
             # fixing the heading to 0
@@ -190,7 +195,10 @@ class VelocityFlyer(Drone):
             numpy array of floats
         """
 
-        lateral_vel_cmd = self._outer_controller.lateral_position_control(self._target_position, self.local_position)
+        lateral_vel_cmd = self._outer_controller.lateral_position_control(self._target_position,
+                                                                          self.local_position,
+                                                                          self._target_velocity)
+
         hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])  # TODO: check the signs here
 
         return np.array([lateral_vel_cmd[0], lateral_vel_cmd[1], -hdot_cmd])
@@ -255,7 +263,6 @@ class VelocityFlyer(Drone):
         #    pass
 
         self.stop_log()
-
 
 
 if __name__ == "__main__":

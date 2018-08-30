@@ -136,14 +136,15 @@ class VelocityFlyer(Drone):
             # This is a good way to be able to test your initial set of gains without having to
             # worry about your crazyflie flying away too quickly.
             #
-            self.check_and_increment_waypoint()
+            #self.check_and_increment_waypoint()
             ########################################################################################
 
             # run the outer loop controller (position controller -> to velocity command)
             vel_cmd = self.run_outer_controller()
 
             # send the velocity command to the drone
-            self.cmd_velocity(vel_cmd)
+            # fixing the heading to 0
+            self.cmd_velocity(vel_cmd[0], vel_cmd[1], vel_cmd[2], 0.0)
 
     def velocity_callback(self):
         if self._flight_state == States.LANDING:

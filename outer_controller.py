@@ -25,8 +25,8 @@ class OuterLoopController(object):
     def __init__(self):
 
         # define all the gains that will be needed
-        self._kp_pos = 0  # gain for lateral position error (solution: XXX)
-        self._kp_alt = 0  # gain for altitude error  (solution: XXX)
+        self._kp_pos = 0.2  # gain for lateral position error (solution: XXX)
+        self._kp_alt = 0.5  # gain for altitude error  (solution: XXX)
         self._kp_yaw = 0  # gain for yaw error (solution: XXX)
 
         # some limits to use
@@ -41,7 +41,7 @@ class OuterLoopController(object):
 
         Args:
             pos_cmd: the commanded position [north, east, down] in [m]
-            pos: the current position [north, east,down] in [m]
+            pos: the current position [north, east, down] in [m]
             vel_cmd: the commanded velocity [vn, ve, vd] in [m/s]
 
         Returns:
@@ -52,11 +52,11 @@ class OuterLoopController(object):
         # TODO: compute a [Vn, Ve] command
 
         # solution #
-        vel_cmd += self._kp_pos * (pos_cmd[0:2] - pos[0:2])
-        vel_cmd = np.clip(vel_cmd, -self._v_max, self._v_max)
+        vel_cmd[0:2] += self._kp_pos * (pos_cmd[0:2] - pos[0:2])
+        vel_cmd[0:2] = np.clip(vel_cmd[0:2], -self._v_max, self._v_max)
         # solution #
 
-        return vel_cmd
+        return vel_cmd[0:2]
 
     def altitude_control(self, alt_cmd, alt, hdot_cmd=0.0):
         """compute the vertical velocity command to control the altitude.

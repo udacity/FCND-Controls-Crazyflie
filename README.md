@@ -12,7 +12,8 @@ The crazyflie exposes two levels of control: velocity commands and attitude comm
      + [lateral position controller](#lateral-position-controller)
 
  - [inner loop controller](#inner-loop-controller)
-     + velocity controller
+     + [attitude](#attitude)
+     + [thrust](#thrust)
 
 The first controller that will be built is the outer loop controller which will compute velocity commands that can be sent to the crazyflie and consists of an altitude controller and a lateral position controller.  See the figure below for a schematic of this controller.
 
@@ -118,15 +119,14 @@ So to build some of our intuition, we can see that setting the max speed value a
 
 Now that we have made a working outer loop controller that is successfully able to fly the crazyflie using velocity commands, let's build an inner loop controller that will take those velocity commands and generate attitude/thrust commands to control the crazyflie.
 
+You may be thinking "why would I want to command attitude, when commanding a velocity gives me a good enough position controller!"  And you would be right in thinking that!  If your goal is solely to command a position in space and you have a drone that can do accurate velocity commands, then you may find you don't need to go this far.  But, what if you want to be able to not just go from point A to point B, but do so with specific orientations in space?  For example, what if you wanted to go through a window and you knew you needed to be perfectly level going through the window, or more interestingly, at a specific angle?  This starts to go into the realm of flying specific trajectories, which we will get to a little later, but provides a little insight as to why you might end up commanding at this level if you do have velocity commands at your disposal.  (Remember there is always the case where your drone only supports attitude commands!)
+
 While the entire inner loop will be tested at once, we will build it in two steps:
 
  1. compute attitude commands from the horizontal velocity command
-
  2. compute the thrust command (total thrust) from the vertical velocity command
 
 ### Attitude ###
-
-Now that you've written a controller commanding velocity, let's go one step further and command attitude.  You may be thinking "why would I want to command attitude, when commanding a velocity gives me a good enough position controller!"  And you would be right in thinking that!  If your goal is solely to command a position in space and you have a drone that can do accurate velocity commands, then you may find you don't need to go this far.  But, what if you want to be able to not just go from point A to point B, but do so with specific orientations in space?  For example, what if you wanted to go through a window and you knew you needed to be perfectly level going through the window, or more interestingly, at a specific angle?  This starts to go into the realm of flying specific trajectories, which we will get to a little later, but provides a little insight as to why you might end up commanding at this level if you do have velocity commands at your disposal.  (Remember there is always the case where your drone only supports attitude commands!)
 
 We have already generated a velocity command for our position error, so let's build on that and use the cascaded structure we saw in the controls projects to generate an attitude command from our velocity command:
 
@@ -145,9 +145,7 @@ def velocity_controller(self, vel_cmd, vel):
 
 ### Thrust ###
 
-Now that we've moved on to sending attitude commands, we also need to update our altitude controller to send thrust commands instead of velocity commands.  In the controls project, the altitude controller computed all the way to thrust, but for the crazyflie, we will have this level of control done in our velocity controller.
-
-Instead of true thrust, we will need to send a normalized thrust command, that is, a value between 0 and 1 to represent the thrust level, with 0 being no thrust and 1 being the max amount of thrust possible.  This does mean we need to know how much thrust, in [N], is the max possible thrust of the crazyflie.  We've done that calculation for you and you can find it as a constant at the top of the `TODO: file name` file.
+The second half of the velocity controller is to convert the vertical velocity to a thrust command.  Instead of true thrust, we will need to send a normalized thrust command, that is, a value between 0 and 1 to represent the thrust level, with 0 being no thrust and 1 being the max amount of thrust possible.  This does mean we need to know how much thrust, in [N], is the max possible thrust of the crazyflie.  We've done that calculation for you and you can find it as a constant at the top of the `inner_controller.py` file.
 
 So let's again use the same process as the controls project to compute the thrust:
 
@@ -164,7 +162,6 @@ def velocity_controller(self, vel_cmd, vel)
 
     return pitch_cmd, roll_cmd, thrust_cmd
 ```
-
 
 ### Choosing an Initial Gain ###
 
@@ -205,7 +202,6 @@ For those of you who are ambitious, here are some ideas of how you might be able
  - **Create your own trajectory files.**  How quickly can you get your crazyflie to fly a given trajectory?  How tight of turns, or how complex of trajectories can your controller handle?
 
  - **Add attitude information to trajectory.**  Extend the trajectory handler and the file format to include attitude to each trajectory point.  Can you successfully achieve specific attitudes at specific times during the flight?
-
 
 
 ## Single Controller Option ##

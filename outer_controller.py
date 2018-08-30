@@ -25,7 +25,7 @@ class OuterLoopController(object):
     def __init__(self):
 
         # define all the gains that will be needed
-        self._kp_pos = 0.2  # gain for lateral position error (solution: XXX)
+        self._kp_pos = 0.4  # gain for lateral position error (solution: XXX)
         self._kp_alt = 0.5  # gain for altitude error  (solution: XXX)
         self._kp_yaw = 0  # gain for yaw error (solution: XXX)
 

@@ -45,7 +45,7 @@ from outer_controller import OuterLoopController
 # in `local_position_callback`) to ensure that the crazyflie attempts to hold this position.
 ######
 
-# WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
+WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
 
 
 ######
@@ -54,10 +54,10 @@ from outer_controller import OuterLoopController
 # Simple 2 point waypoint path to go away and come back.
 ######
 
-WAYPOINT_LIST = [
-    [1.5, 0.0, -0.5],
-    [0.0, 0.0, -0.5]
-    ]
+# WAYPOINT_LIST = [
+#     [1.5, 0.0, -0.5],
+#     [0.0, 0.0, -0.5]
+#     ]
 
 
 ######
@@ -138,7 +138,7 @@ class VelocityFlyer(Drone):
             # This is a good way to be able to test your initial set of gains without having to
             # worry about your crazyflie flying away too quickly.
             #
-            self.check_and_increment_waypoint()
+            # self.check_and_increment_waypoint()
             ########################################################################################
 
             # run the outer loop controller (position controller -> to velocity command)

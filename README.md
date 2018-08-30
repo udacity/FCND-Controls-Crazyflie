@@ -1,16 +1,3 @@
-# TO REMOVE #
-
-## Writing a Controller for the Crazyflie ##
-
-Throughout the course, we've handled a variety of different levels of control of a drone, from commanding positions in the first project (Backyard Flyer) to commanding motor thrusts themselves in the third project (Controls).  When it comes to real drones, you will come across interfaces that allow a varying level of control, meaning, you will come across drones that only open position control to the user, some that allow velocity control, and even some that allow acceleration control from "offboard" the drone, meaning not as part of the core control system.  As an aside, the level of control used in the third project (motor thrusts) is typically only ever seen within the core controller of the drone itself, so odds are if you are writing code for that, you're working on the main control system itself!
-
-When it comes to the crazyflie, it opens up a couple levels of control for us to work with: velocity and attitude.  In this optional lesson, we will go through and see how to apply the concepts you've learned in the controls section to build a lateral position, altitude, velocity and yaw controller for your crazyflie, first using the velocity command API and then using the attitude command API.
-
-Unfortunately, because the level of commands available to us are different than the simulator from the controls project, for the most part, we can't directly use that script to control the crazyflie, however we will be using the same concepts and a similar control structure for the crazyflie.
-
-# END TO REMOVE #
-
-
 # A Controller for the Crazyflie #
 
 For this optional "project" you will be applying the concepts you've learned to creating a controller for the crazyflie drone through the udacidrone API.
@@ -20,11 +7,11 @@ For this optional "project" you will be applying the concepts you've learned to 
 
 The crazyflie exposes two levels of control: velocity commands and attitude commands.  As there are two possible options, the development of an offboard controller will be done in two major steps for ease of testing and demonstration:
 
- - outer loop controller
-     + altitude controller
-     + lateral position controller
+ - [outer loop controller](#outer-loop-controller)
+     + [altitude controller](#altitude-controller)
+     + [lateral position controller](#lateral-position-controller)
 
- - inner loop controller
+ - [inner loop controller](#inner-loop-controller)
      + velocity controller
 
 The first controller that will be built is the outer loop controller which will compute velocity commands that can be sent to the crazyflie and consists of an altitude controller and a lateral position controller.  See the figure below for a schematic of this controller.

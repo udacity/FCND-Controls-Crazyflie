@@ -1,4 +1,6 @@
-# Writing a Controller for the Crazyflie #
+# TO REMOVE #
+
+## Writing a Controller for the Crazyflie ##
 
 Throughout the course, we've handled a variety of different levels of control of a drone, from commanding positions in the first project (Backyard Flyer) to commanding motor thrusts themselves in the third project (Controls).  When it comes to real drones, you will come across interfaces that allow a varying level of control, meaning, you will come across drones that only open position control to the user, some that allow velocity control, and even some that allow acceleration control from "offboard" the drone, meaning not as part of the core control system.  As an aside, the level of control used in the third project (motor thrusts) is typically only ever seen within the core controller of the drone itself, so odds are if you are writing code for that, you're working on the main control system itself!
 
@@ -6,9 +8,17 @@ When it comes to the crazyflie, it opens up a couple levels of control for us to
 
 Unfortunately, because the level of commands available to us are different than the simulator from the controls project, for the most part, we can't directly use that script to control the crazyflie, however we will be using the same concepts and a similar control structure for the crazyflie.
 
-TODO: add a figure of the control structure for the crazyflie controller
+# END TO REMOVE #
 
-Much like the controls project, we will be building this one controller at a time.  We will construct it in the following order:
+
+# A Controller for the Crazyflie #
+
+For this optional "project" you will be applying the concepts you've learned to creating a controller for the crazyflie drone through the udacidrone API.
+
+
+## Control Architecture ##
+
+The crazyflie exposes two levels of control: velocity commands and attitude commands.  As there are two possible options, the development of an offboard controller will be done in two major steps for ease of testing and demonstration:
 
  - outer loop controller
      + altitude controller
@@ -17,21 +27,30 @@ Much like the controls project, we will be building this one controller at a tim
  - inner loop controller
      + velocity controller
 
+The first controller that will be built is the outer loop controller which will compute velocity commands that can be sent to the crazyflie and consists of an altitude controller and a lateral position controller.  See the figure below for a schematic of this controller.
+
+![outer loop controller schematic](crazyflie_outer.png?raw=true "Outer Loop Schematic")
+
+The second controller that will be built is the inner loop controller which computes attitude/thrust commands from the velocity commands computed by the outer loop controller.  This then feeds those attitude/thrust commands to the crazyflie.  See the figure below for a schematic of this controller.
+
+![inner loop controller schematic](crazyflie_inner.png?raw=true "Inner Loop Schematic")
+
 For the most part these controllers are very similar to the ones from the controls project, with a few exceptions.  The altitude controller and lateral position controller will just stop at velocity commands, we won't be calculating all the way to accelerations.  The yaw controller will be exactly the same as what was seen in the controls project as we are once again controlling yaw rate with the crazyflie.  The velocity controller is new and this is where we will control velocity by commanding attitudes.
 
 As we build the controller step by step, we will actually be leveraging the fact that the crazyflie already has a controller written for it.  This will allow us to only introduce one part of the controller at the time and let the existing controller handling the other elements for us.  For example, as we build the altitude controller, we will be leaving lateral velocity control to the crazyflie so it will maintain 0 velocity in the lateral directions unabling us to focus entirely on the altitude controller.
 
 ## Repository Structure ##
 
-TODO: add some details on how the repo is structured
+This repository contains the skeleton code (`master` branch) for developing a controller for the crazyflie and a solution version (`solution` branch) that contains a tuned implementation of the controllers.
 
-TODO: add some details on what files the code should be written in, etc
+**NOTE: as this control is done offboard the crazyflie, there may be some variation in performance from one computer to another, so you may find that the tuning on the solution may not work best for your computer.**
 
-target format:
- - a controller file that is empty that can be used by students as the starting point
- - a controller for each of the specific cases below
- - a script file for each of the specific cases below???
- - a script file for the students as a starting point????
+There are two sets of files in the repository:
+
+ - `*_flyer.py` - these files contain implementations of the Udacidrone `Drone` class that handle managing the link and controlling the crazyflie.  When it comes to running the code, these are the files you run.
+
+ - `*_controller.py` - these files contain the controllers themselves (and is where you will find TODOs in the `master` branch to be completed).  There is one controller file for each the outer loop and inner loop controllers.
+
 
 ## Outer Loop Controller ##
 
@@ -45,7 +64,7 @@ Much like in the project, we will create a PID controller on the altitude to com
 
 ```python
 def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
-    hdot_cmd += self.kp_alt * (alt_cmd - alt)  # compute desired vertical velocity from altitude error
+    hdot_cmd += self._kp_alt * (alt_cmd - alt)  # compute desired vertical velocity from altitude error
     hdot_cmd = np.clip(hdot_cmd, -self._hdot_max, self._hdot_max)  # saturate as desired
     return hdot_cmd
 ```
@@ -54,8 +73,9 @@ def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
 
 And that's it!  Now to choose a gain and see what happens (see below for chosing a gain TODO: link to section below)!
 
-**For an example script of just the altitude controller working to maintain altitude, check out the `script name here`.**
+*NOTE: if you leave the lateral position gain (self._kp_pos) set to 0, then only the altitude controller will run, allowing you to focus tuning the altitude controller alone.  The crazyflie may drift slowly as it is only trying to maintain 0 lateral velocity, not hold a position, but the drift should be fairly slow.*
 
+*NOTE: when flying, if you would like to stop the flight for any reason `ctrl+c` or `cmd+c` (for mac) will trigger landing of the crazyflie.*
 
 ### Lateral Position Controller ###
 

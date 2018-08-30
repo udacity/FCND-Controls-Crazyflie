@@ -33,7 +33,7 @@ The first controller that will be built is the outer loop controller which will 
 
 The second controller that will be built is the inner loop controller which computes attitude/thrust commands from the velocity commands computed by the outer loop controller.  This then feeds those attitude/thrust commands to the crazyflie.  See the figure below for a schematic of this controller.
 
-![inner loop controller schematic](crazyflie_inner.png?raw=true "Inner Loop Schematic")
+![inner loop controller schematic](crazyflie_outer_inner.png?raw=true "Inner Loop Schematic")
 
 For the most part these controllers are very similar to the ones from the controls project, with a few exceptions.  The altitude controller and lateral position controller will just stop at velocity commands, we won't be calculating all the way to accelerations.  The yaw controller will be exactly the same as what was seen in the controls project as we are once again controlling yaw rate with the crazyflie.  The velocity controller is new and this is where we will control velocity by commanding attitudes.
 

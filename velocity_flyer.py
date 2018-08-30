@@ -44,7 +44,7 @@ from outer_controller import OuterLoopController
 # in `local_position_callback`) to ensure that the crazyflie attempts to hold this position.
 ######
 
-WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
+# WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
 
 
 ######
@@ -53,10 +53,10 @@ WAYPOINT_LIST = [[0.0, 0.0, -0.5]]
 # Simple 2 point waypoint path to go away and come back.
 ######
 
-# WAYPOINT_LIST = [
-#     [1.5, 0.0, -0.5],
-#     [0.0, 0.0, -0.5]
-#     ]
+WAYPOINT_LIST = [
+    [1.5, 0.0, -0.5],
+    [0.0, 0.0, -0.5]
+    ]
 
 
 ######
@@ -143,7 +143,8 @@ class VelocityFlyer(Drone):
             vel_cmd = self.run_outer_controller()
 
             # send the velocity command to the drone
-            self.cmd_velocity(vel_cmd)
+            # fixing the heading to 0
+            self.cmd_velocity(vel_cmd[0], vel_cmd[1], vel_cmd[2], 0.0)
 
     def velocity_callback(self):
         if self._flight_state == States.LANDING:

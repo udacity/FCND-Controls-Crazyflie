@@ -35,7 +35,7 @@ This repository contains the skeleton code (`master` branch) for developing a co
 
 There are two sets of files in the repository:
 
- - `*_flyer.py` - these files contain implementations of the Udacidrone `Drone` class that handle managing the link and controlling the crazyflie.  When it comes to running the code, these are the files you run.
+ - `*_flyer.py` - these files contain implementations of the Udacidrone `Drone` class that handle managing the link and controlling the crazyflie.  When it comes to running the code, these are the files you run.  Make sure you read through all the comments within the code for a full description of the functionality and configurations that are possible.
 
  - `*_controller.py` - these files contain the controllers themselves (and is where you will find TODOs in the `master` branch to be completed).  There is one controller file for each the outer loop and inner loop controllers.
 
@@ -61,9 +61,17 @@ def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
 
 And that's it!  Now to [choose a gain](#break-an-anside-on-gain-selection) and see what happens!
 
-*NOTE: if you leave the lateral position gain (self._kp_pos) set to 0, then only the altitude controller will run, allowing you to focus tuning the altitude controller alone.  The crazyflie may drift slowly as it is only trying to maintain 0 lateral velocity, not hold a position, but the drift should be fairly slow.*
+Once you have decided on a gain, you can run this outer loop controller using the `velocity_flyer.py` script as follows:
 
-*NOTE: when flying, if you would like to stop the flight for any reason `ctrl+c` or `cmd+c` (for mac) will trigger landing of the crazyflie.*
+```sh
+python velocity_flyer.py --uri radio://0/80/2M
+```
+
+Where the uri passed in should be the uri you configured for your crazyflie.
+
+*NOTE: if you leave the lateral position gain (`self._kp_pos`) set to 0, then only the altitude controller will run, allowing you to focus tuning the altitude controller alone.  The crazyflie may drift slowly as it is only trying to maintain 0 lateral velocity, not hold a position, but the drift should be fairly slow.*
+
+**IMPORTANT NOTE: if at any time you need to stop the script and control of the crazyflie, if ctrl+c does not work, simply unplug the crazyradio dongle from your computer and the crazyflie will go into "stop" mode after a couple seconds (this will make it fall out of the sky).**
 
 ### Lateral Position Controller ###
 
@@ -81,6 +89,14 @@ def lateral_position_control(self, pos_cmd, pos, vel_cmd):
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
 And that's it!  Now we just need to choose a starting gain and see how it works.
+
+Once you have decided on a gain, you can run this outer loop controller using the `velocity_flyer.py` script as follows:
+
+```sh
+python velocity_flyer.py --uri radio://0/80/2M
+```
+
+Where the uri passed in should be the uri you configured for your crazyflie.
 
 ### Break: An Aside on Gain Selection ###
 
@@ -163,6 +179,16 @@ def velocity_controller(self, vel_cmd, vel)
 
     return pitch_cmd, roll_cmd, thrust_cmd
 ```
+
+### Flying it! ###
+
+Once you have decided on a gain, you can run this inner loop controller using the `attitude_flyer.py` script as follows:
+
+```sh
+python attitude_flyer.py --uri radio://0/80/2M
+```
+
+Where the uri passed in should be the uri you configured for your crazyflie.
 
 ## Flying Trajectories ##
 

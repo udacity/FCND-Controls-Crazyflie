@@ -10,6 +10,9 @@ To run the script:
 
 python velocity_flyer.py --uri radio://0/80/2M
 
+IMPORTANT NOTE: if at any time you need to stop the script and control of the crazyflie, if ctrl+c does not work,
+simply unplug the crazyradio dongle from your computer and the crazyflie will go into "stop" mode after a couple
+seconds (this will make it fall out of the sky).
 
 @author Adrien Perkins
 """

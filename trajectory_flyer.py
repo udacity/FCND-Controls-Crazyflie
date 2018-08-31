@@ -156,7 +156,7 @@ class TrajectoryVelocityFlyer(Drone):
         self._outer_controller = OuterLoopController()
 
         # get the trajectory handler
-        self._traj_handler = TrajectoryHandler("figure8.txt")
+        self._traj_handler = TrajectoryHandler("line_traj.txt")
         self._start_time = 0.0  # this is the time that the flight started -> will be set on takeoff
 
     def local_position_callback(self):
@@ -192,7 +192,7 @@ class TrajectoryVelocityFlyer(Drone):
             vel_cmd = self.run_outer_controller()
 
             # send the velocity command to the drone
-            self.cmd_velocity(vel_cmd)
+            self.cmd_velocity(vel_cmd[0], vel_cmd[1], vel_cmd[2], 0.0)
 
     def velocity_callback(self):
         if self._flight_state == States.LANDING:
@@ -226,7 +226,7 @@ class TrajectoryVelocityFlyer(Drone):
                                                                           self._target_velocity)
         hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2],
                                                            -self.local_position[2],
-                                                           -self._target_velocity[2])  # TODO: check the signs here
+                                                           -self._target_velocity[2])
 
         return np.array([lateral_vel_cmd[0], lateral_vel_cmd[1], -hdot_cmd])
 
@@ -242,9 +242,7 @@ class TrajectoryVelocityFlyer(Drone):
         target_altitude = TAKEOFF_ALTITUDE
         self._target_position[2] = target_altitude
 
-        # NOTE: if you'd like to see how your controller behaves with takeoff, comment out `self.takeoff(target_altitude)`
-        # and uncomment the position controller above -> TODO: direct to a line of code or something
-
+        # NOTE: the configuration let's the crazyflie handle the takeoff
         self.takeoff(target_altitude)
         self._flight_state = States.TAKEOFF
 
@@ -254,6 +252,7 @@ class TrajectoryVelocityFlyer(Drone):
 
     def landing_transition(self):
         print("landing transition")
+        # NOTE: the configuration let's the crazyflie handle the takeoff
         self.land()
         self._flight_state = States.LANDING
 
@@ -304,6 +303,6 @@ if __name__ == "__main__":
         print("{} is an unsupported connection option, see help for options".format(args.connection))
         quit()
 
-    drone = VelocityFlyer(conn)
+    drone = TrajectoryVelocityFlyer(conn)
     time.sleep(2)
     drone.start()

@@ -25,7 +25,7 @@ The second controller that will be built is the inner loop controller which comp
 
 For the most part these controllers are very similar to the ones from the controls project, with a few exceptions.  The altitude controller and lateral position controller will just stop at velocity commands, we won't be calculating all the way to accelerations.  The yaw controller will be exactly the same as what was seen in the controls project as we are once again controlling yaw rate with the crazyflie.  The velocity controller is new and this is where we will control velocity by commanding attitudes.
 
-As we build the controller step by step, we will actually be leveraging the fact that the crazyflie already has a controller written for it.  This will allow us to only introduce one part of the controller at the time and let the existing controller handling the other elements for us.  For example, as we build the altitude controller, we will be leaving lateral velocity control to the crazyflie so it will maintain 0 velocity in the lateral directions unabling us to focus entirely on the altitude controller.
+As we build the controller step by step, we will actually be leveraging the fact that the crazyflie already has a controller written for it.  This will allow us to only introduce one part of the controller at the time and let the existing controller handling the other elements for us.  For example, as we build the altitude controller, we will be leaving lateral velocity control to the crazyflie so it will maintain 0 velocity in the lateral directions enabling us to focus entirely on the altitude controller.
 
 ## Repository Structure ##
 

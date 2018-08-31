@@ -20,8 +20,8 @@ class OuterLoopController(object):
     def __init__(self):
 
         # define all the gains that will be needed
-        self._kp_pos = 0.4  # gain for lateral position error
-        self._kp_alt = 0.3  # gain for altitude error
+        self._kp_pos = 0.0  # gain for lateral position error
+        self._kp_alt = 0.0  # gain for altitude error
 
         # some limits to use
         self._v_max = 0.3       # the maximum horizontal velocity in [m/s]
@@ -45,11 +45,6 @@ class OuterLoopController(object):
 
         # Student TODO: compute a [Vn, Ve] command
 
-        # solution #
-        pos_error = pos_cmd[0:2] - pos[0:2]
-        lateral_vel_cmd = self._kp_pos * pos_error + vel_cmd[0:2]
-        lateral_vel_cmd = np.clip(lateral_vel_cmd, -self._v_max, self._v_max)
-        # solution #
 
         return lateral_vel_cmd
 
@@ -71,9 +66,5 @@ class OuterLoopController(object):
 
         # Student TODO: compute a [Vup] command
 
-        # solution #
-        hdot_cmd += self._kp_alt * (alt_cmd - alt)
-        hdot_cmd = np.clip(hdot_cmd, -self._hdot_max, self._hdot_max)
-        # solution #
 
         return hdot_cmd

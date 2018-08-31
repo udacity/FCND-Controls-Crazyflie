@@ -18,8 +18,8 @@ class InnerLoopController(object):
     def __init__(self):
 
         # the gains that are needed
-        self._kp_vel = 0.14  # the gain on the velocity to get attitude
-        self._kp_hdot = 1.0  # the gain on the vertical velocity to get accel
+        self._kp_vel = 0.0   # the gain on the velocity to get attitude
+        self._kp_hdot = 0.0  # the gain on the vertical velocity to get accel
 
         # some limits to use
         self._bank_max = np.radians(20)     # max bank (roll and pitch) angle - in radians
@@ -44,22 +44,6 @@ class InnerLoopController(object):
         # Student TODO: compute an attitude command from the given velocity command
         # Student TODO: compute a normalized thrust from the given hdot command
 
-        # solution #
-        pitch = -self._kp_vel * (vel_cmd[0] - vel[0])  # note the sign change!  Remember + pitch is up, meaning it will send out drone backwards!
-        roll = self._kp_vel * (vel_cmd[1] - vel[1])
-
-        # add some limits
-        pitch_cmd = np.clip(pitch, -self._bank_max, self._bank_max)
-        roll_cmd = np.clip(roll, -self._bank_max, self._bank_max)
-
-        # compute acceleration and then thrust for vertical
-        accel_cmd = self._kp_hdot * (hdot_cmd - hdot)
-        accel_cmd = np.clip(accel_cmd, -self._haccel_max, self._haccel_max)
-        thrust_cmd_N = DRONE_M * (accel_cmd + GRAVITY_MAG) / (np.cos(pitch_cmd) * np.cos(roll_cmd)) # positive up
-
-        # need to normalize the thrust
-        thrust_cmd = thrust_cmd_N / MAX_THRUST_N
-        # solution #
 
         # return a tuple with the roll, pitch, and thrust commands
         return (roll_cmd, pitch_cmd, thrust_cmd)

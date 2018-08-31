@@ -1,11 +1,8 @@
 """Controller class for computing attitude and thrust commands.
 
-implementation of a lateral position, altitude, yaw, and velocity controllers for controlling a
-crazyflie via the (Attitude, Thrust) API.
+implementation of the inner loop controller which controls velocity through attitude and thrust commands.
 
-TODO: add copywright and license header
-
-@author Adrien Perkins <adrien.perkins@udacity.com>
+@author Adrien Perkins
 """
 
 import numpy as np
@@ -13,7 +10,7 @@ import numpy as np
 # some necessary constants
 DRONE_M = 0.031         # [kg]
 GRAVITY_MAG = 9.81      # [m/s^2] -> magnitude only
-MAX_THRUST_N = 0.63 #0.625    # the maximum amount of thrust the crazyflie can generate in [N] - DO NOT EDIT
+MAX_THRUST_N = 0.63     # the maximum amount of thrust the crazyflie can generate in [N] - DO NOT EDIT
 
 
 class InnerLoopController(object):
@@ -21,8 +18,8 @@ class InnerLoopController(object):
     def __init__(self):
 
         # the gains that are needed
-        self._kp_vel = 0.14  # the gain on the velocity to get attitude (solution: XXX)
-        self._kp_hdot = 1.0  # the gain on the vertical velocity to get accel (solution: XXX)
+        self._kp_vel = 0.14  # the gain on the velocity to get attitude
+        self._kp_hdot = 1.0  # the gain on the vertical velocity to get accel
 
         # some limits to use
         self._bank_max = np.radians(20)     # max bank (roll and pitch) angle - in radians
@@ -44,9 +41,8 @@ class InnerLoopController(object):
         hdot_cmd = -vel_cmd[2]
         hdot = -vel[2]
 
-        # TODO: compute an attitude command from the given velocity command
-        # TODO: compute a normalized thrust from the given hdot command
-        # NOTE: the velocity command will be set by the lateral_position_control function above!
+        # Student TODO: compute an attitude command from the given velocity command
+        # Student TODO: compute a normalized thrust from the given hdot command
 
         # solution #
         pitch = -self._kp_vel * (vel_cmd[0] - vel[0])  # note the sign change!  Remember + pitch is up, meaning it will send out drone backwards!

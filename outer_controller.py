@@ -4,12 +4,7 @@ Class for the specific impelementation of a controller that will be comanding ve
 Contains the solution for P controllers on altitude and lateral position to commands velocities
 to a crazyflie over the wireless link.
 
-
-TODO: add some description / comments on how this file can be edited???
-Not sure where the best place to do that is....
-
-
-@author: Adrien Perkins <adrien.perkins@udacity.com>
+@author: Adrien Perkins
 """
 
 import numpy as np
@@ -48,7 +43,7 @@ class OuterLoopController(object):
             numpy array
         """
 
-        # TODO: compute a [Vn, Ve] command
+        # Student TODO: compute a [Vn, Ve] command
 
         # solution #
         pos_error = pos_cmd[0:2] - pos[0:2]
@@ -74,7 +69,7 @@ class OuterLoopController(object):
             float
         """
 
-        # TODO: compute a [Vup] command
+        # Student TODO: compute a [Vup] command
 
         # solution #
         hdot_cmd += self._kp_alt * (alt_cmd - alt)

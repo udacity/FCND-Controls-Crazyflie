@@ -1,10 +1,15 @@
 """class and script for a trajectory flying crazyflie.
 
-TODO: add a more detailed description.
+contains an implementation of the udacidrone Drone class to handle the control of a crazyflie through velocity
+commands to be able to fly a given trajectory.
+also contains a helper class to be able to parse a trajectory file and handle calculating the next point in the
+trajectory throughout the flight.
 
-TODO: figure out license and copyright
+To run the script:
 
-@author Adrien Perkins <adrien.perkins@udacity.com>
+python trajectory_flyer.py --uri radio://0/80/2M
+
+@author Adrien Perkins
 """
 
 import argparse
@@ -287,22 +292,15 @@ class TrajectoryVelocityFlyer(Drone):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--connection', type=str, default='simulator', help='the type of drone being connected to (simulator, crazyflie, or px4)')
-    parser.add_argument('--port', type=int, default=5760, help='Port number')
-    parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
+    parser.add_argument('--uri', type=str, default='radio://0/80/2M', help="uri of crazyflie, i.e. 'radio://0/80/2M'")
     args = parser.parse_args()
 
-    if args.connection == 'simulator':
-        conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
-    elif args.connection == 'crazyflie':
-        conn = CrazyflieConnection('{}'.format(args.host))
-    elif args.connection == 'px4':
-        print("not supported in this demo!")
-        quit()
-    else:
-        print("{} is an unsupported connection option, see help for options".format(args.connection))
-        quit()
+    # create the connection
+    conn = CrazyflieConnection('{}'.format(args.uri))
 
+    # create the drone
     drone = TrajectoryVelocityFlyer(conn)
+
+    # a short delay and the start the script
     time.sleep(2)
     drone.start()

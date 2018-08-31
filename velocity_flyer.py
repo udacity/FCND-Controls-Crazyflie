@@ -1,12 +1,17 @@
-"""Class containing the drone implementation for controlling the crazyflie via velocity commands.
+"""Class and script containing the drone implementation for controlling the crazyflie via velocity commands.
 
-A full implementation of the drone class to work with the `VelCmdController` to remotely control
+A full implementation of the drone class to work with the `OuterLoopController` to remotely control
 the position and heading of the crazyflie using the velocity command API.
 
-TODO: add examples of how this class can be run
+Make sure to read through the examples below to help you out getting started with running this flyer.
+Note that the initial configuration of the file is to have the crazyflie takeoff and try and hold (0,0,-0.5).
+
+To run the script:
+
+python velocity_flyer.py --uri radio://0/80/2M
 
 
-@author Adrien Perkins <adrien.perkins@udacity.com>
+@author Adrien Perkins
 """
 
 import argparse
@@ -113,22 +118,16 @@ class VelocityFlyer(Drone):
                 self._all_waypoints = self.calculate_box()
                 self.waypoint_transition()
 
-            # TODO: decide if want to also run the position controller from here
-            # TODO: if desired, could simply call the takeoff method, but would be more complete to also write it here
-
-            # NOTE: one option for testing out the controller that people could do is use the takeoff method
-            # and then simply send the thrust command for hover, this help tune the mass of the drone - if a scale isn't accessible
-            # NOTE: this would be an effort to just try and tie in the content from the C++ project
-
-            # TODO: the same dilema is of note for landing
-            # could just open it up as a "hey if you want to see what your controller does for your entire flight"
-
-        elif self._flight_state == States.WAYPOINT:
+        # NOTE: as configured the crazyflie will handle the takeoff and landing
+        # however, you can configure it to use your controller by calling your controller during
+        # the takeoff and landing state.  You will also need to make sure to comment out
+        # the calls to `self.land()` and `self.takeoff()` in the respective transition functions below.
+        elif self._flight_state == States.WAYPOINT:  # or self._flight_state == States.TAKEOFF or self._flight_state == States.LANDING:
 
             # DEBUG
-            print("curr pos: ({:.2f}, {:.2f}, {:.2f}), desired pos: ({:.2f}, {:.2f}, {:.2f})".format(
-                self.local_position[0], self.local_position[1], self.local_position[2],
-                self._target_position[0], self._target_position[1], self._target_position[2]))
+            # print("curr pos: ({:.2f}, {:.2f}, {:.2f}), desired pos: ({:.2f}, {:.2f}, {:.2f})".format(
+            #     self.local_position[0], self.local_position[1], self.local_position[2],
+            #     self._target_position[0], self._target_position[1], self._target_position[2]))
 
 
             ########################### Waypoint Incrementing Block ################################
@@ -175,8 +174,8 @@ class VelocityFlyer(Drone):
         if there are no more waypoints, trigger the landing transition.
         """
 
-        # TODO: may need to make this use all 3 elements of the vector,
-        # as want any altitude changes to also be met
+        # NOTE: depending on how aggressive of paths you are flying, and how reliably you want
+        # them to be flown, you may want to add the vertical axis to the distance check.
         if np.linalg.norm(self._target_position[0:2] - self.local_position[0:2]) < 0.2:
             if len(self._all_waypoints) > 0:
                 self.waypoint_transition()
@@ -199,7 +198,7 @@ class VelocityFlyer(Drone):
                                                                           self.local_position,
                                                                           self._target_velocity)
 
-        hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])  # TODO: check the signs here
+        hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])
 
         return np.array([lateral_vel_cmd[0], lateral_vel_cmd[1], -hdot_cmd])
 
@@ -267,22 +266,15 @@ class VelocityFlyer(Drone):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--connection', type=str, default='simulator', help='the type of drone being connected to (simulator, crazyflie, or px4)')
-    parser.add_argument('--port', type=int, default=5760, help='Port number')
-    parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
+    parser.add_argument('--uri', type=str, default='radio://0/80/2M', help="uri of crazyflie, i.e. 'radio://0/80/2M'")
     args = parser.parse_args()
 
-    if args.connection == 'simulator':
-        conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
-    elif args.connection == 'crazyflie':
-        conn = CrazyflieConnection('{}'.format(args.host))
-    elif args.connection == 'px4':
-        print("not supported in this demo!")
-        quit()
-    else:
-        print("{} is an unsupported connection option, see help for options".format(args.connection))
-        quit()
+    # create the connection
+    conn = CrazyflieConnection('{}'.format(args.uri))
 
+    # create the drone
     drone = VelocityFlyer(conn)
+
+    # a short delay and the start the script
     time.sleep(2)
     drone.start()

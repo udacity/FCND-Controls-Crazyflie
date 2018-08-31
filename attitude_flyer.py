@@ -98,6 +98,7 @@ class AttitudeFlyer(Drone):
 
         # some local variables
         self._target_position = np.array([0.0, 0.0, 0.0])  # [North, East, Down]
+        self._target_velocity = np.array([0.0, 0.0, 0.0])  # [Vn, Ve, Vd]
         self._all_waypoints = []
         self._in_mission = True
 
@@ -140,9 +141,9 @@ class AttitudeFlyer(Drone):
         elif self._flight_state == States.WAYPOINT:
 
             # DEBUG
-            # print("curr pos: ({0:.2f}, {0:.2f}, {0:.2f}), desired pos: ({0:.2f}, {0:.2f}, {0:.2f})".format(
-            #     self.local_position[0], self.local_position[1], self.local_position[2],
-            #     self._target_position[0], self._target_position[1], self._target_position[2]))
+            print("curr pos: ({:.2f}, {:.2f}, {:.2f}), desired pos: ({:.2f}, {:.2f}, {:.2f})".format(
+                self.local_position[0], self.local_position[1], self.local_position[2],
+                self._target_position[0], self._target_position[1], self._target_position[2]))
 
 
             ########################### Waypoint Incrementing Block ################################
@@ -152,7 +153,7 @@ class AttitudeFlyer(Drone):
             # This is a good way to be able to test your initial set of gains without having to
             # worry about your crazyflie flying away too quickly.
             #
-            self.check_and_increment_waypoint()
+            # self.check_and_increment_waypoint()
             ########################################################################################
 
             # run the outer loop controller (position controller -> to velocity command)
@@ -165,11 +166,11 @@ class AttitudeFlyer(Drone):
     def velocity_callback(self):
 
         if self._flight_state == States.LANDING:
-            if abs(self.local_velocity[2]) < 0.05:
+            if -1.0*self.local_position[2] < 0.1 and abs(self.local_velocity[2]) < 0.05:
                 self.disarming_transition()
 
         # NOTE: can also run the controller for takeoff and landing if desired
-        if self._flight_state == States.WAYPOINT: # or self._flight_state == States.TAKEOFF or self._flight_state == States.LANDING:
+        if self._flight_state == States.WAYPOINT or self._flight_state == States.TAKEOFF or self._flight_state == States.LANDING:
             roll_cmd, pitch_cmd, thrust_cmd = self.run_inner_controller()
 
             # NOTE: yaw control is not implemented, just commanding 0 yaw
@@ -214,8 +215,11 @@ class AttitudeFlyer(Drone):
             numpy array of floats
         """
 
-        lateral_vel_cmd = self._outer_controller.lateral_position_control(self._target_position, self.local_position)
-        hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])  # TODO: check the signs here
+        lateral_vel_cmd = self._outer_controller.lateral_position_control(self._target_position,
+                                                                          self.local_position,
+                                                                          self._target_velocity)
+
+        hdot_cmd = self._outer_controller.altitude_control(-self._target_position[2], -self.local_position[2])
 
         return np.array([lateral_vel_cmd[0], lateral_vel_cmd[1], -hdot_cmd])
 
@@ -249,10 +253,10 @@ class AttitudeFlyer(Drone):
         target_altitude = TAKEOFF_ALTITUDE
         self._target_position[2] = target_altitude
 
-        # NOTE: if you'd like to see how your controller behaves with takeoff, comment out `self.takeoff(target_altitude)`
-        # and uncomment the position controller above -> TODO: direct to a line of code or something
-
-        self.takeoff(target_altitude)
+        # NOTE: the current configuration has the controller command everything from takeoff to landing
+        # to let the crazyflie handle takeoff, uncomment the follow and change the conditions accordingly
+        # in the velocity callback
+        # self.takeoff(target_altitude)
         self._flight_state = States.TAKEOFF
 
     def waypoint_transition(self):
@@ -263,7 +267,10 @@ class AttitudeFlyer(Drone):
 
     def landing_transition(self):
         print("landing transition")
-        self.land()
+        # NOTE: the current configuration has the controller command everything from takeoff to landing
+        # to let the crazyflie handle landing, uncomment the follow and change the conditions accordingly
+        # in the velocity callback
+        # self.land()
         self._flight_state = States.LANDING
 
     def disarming_transition(self):

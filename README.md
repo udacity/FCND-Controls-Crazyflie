@@ -59,7 +59,7 @@ def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
 
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
-And that's it!  Now to [choose a gain](#break-an-anside-on-gain-selection) and see what happens!
+And that's it!  Now to [choose a gain](#break-an-aside-on-gain-selection) and see what happens!
 
 Once you have decided on a gain, you can run this outer loop controller using the `velocity_flyer.py` script as follows:
 

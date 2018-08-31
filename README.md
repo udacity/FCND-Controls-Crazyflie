@@ -59,7 +59,7 @@ def altitude_controller(self, alt_cmd, alt, hdot_cmd=0.0):
 
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
-And that's it!  Now to choose a gain and see what happens (see below for chosing a gain TODO: link to section below)!
+And that's it!  Now to [choose a gain](#break-an-anside-on-gain-selection) and see what happens!
 
 *NOTE: if you leave the lateral position gain (self._kp_pos) set to 0, then only the altitude controller will run, allowing you to focus tuning the altitude controller alone.  The crazyflie may drift slowly as it is only trying to maintain 0 lateral velocity, not hold a position, but the drift should be fairly slow.*
 
@@ -80,7 +80,7 @@ def lateral_position_control(self, pos_cmd, pos, vel_cmd):
 
 *NOTE: for the crazyflie a simple P controller is all that will be necessary, however try adding the I and D terms and see how it changes the controller!*
 
-And that's it!  Now we just need to choose a starting gain and see how it works (TODO: link to section below).
+And that's it!  Now we just need to choose a starting gain and see how it works.
 
 ### Break: An Aside on Gain Selection ###
 
@@ -95,12 +95,12 @@ For example, let's set our max velocity to 1 m/s and set `_kp_pos = 0.5`, let's 
  - at 1 meter away, we will be flying 0.5 m/s
  - at 0.5 meters away, we will be flying at 0.25 m/s
 
-TODO: add plot with several different gain values to illustrate the velocity profile as we approach the waypoint.
-
 Now let's say we set `_kp_pos = 10`, let's take a look at what it means:
 
  - at 1 meter away, we will be flying at 10 m/s (or max velocity)
  - at 0.5 meters away, we will be flying at 5 m/s (or max velocity)
+
+*For those who need a bit more of a visualization, go ahead and plot it out, you will see that as you increase your gain, the slope of the resulting velocity can get impossibly steep!*
 
 Do you think that the crazyflie will be able to stop without overshooting if it's still flying at 5 m/s when it's 0.5 meters away from the target position?
     
@@ -108,9 +108,13 @@ Do you think that the crazyflie will be able to stop without overshooting if it'
 
 Do you think you could approach the target position faster than 0.25 m/s when 0.5 meters out?
 
-These are the questions that you should be asking yourself as you choose an initial set of gains to work with for your controller.  You shoudl err on the side of caution and go with the option that gives you room to increase your gain to get better performance rather than have to decrease your gain.
+These are the questions that you should be asking yourself as you choose an initial set of gains to work with for your controller.  You should err on the side of caution and go with the option that gives you room to increase your gain to get better performance rather than have to decrease your gain.
 
-As a last part to build some of our intution, we can see that setting the max speed value allows us to have very aggressive control without the proportional, potentially impossibly high, speed increase when `pos_error >> 0`.
+As a last part to build some of our intuition, we can see that setting the max speed value allows us to have very aggressive control without the proportional, potentially impossibly high, speed increase when `pos_error >> 0`.
+
+In the next controller (the inner loop controller), this same thought process can also be used to get an idea for what kind of gain might seem like a reasonable starting point.  It gets a little trickier as the units get a bit less intuitive (attitude will all be in radians), but the same intuition can give you a helping hand!
+
+**It is worth mentioning that in this case there really isn't such a thing as too small of a value, worse case your crazyflie will just not go anywhere, but it also won't fall out of the sky.  When it comes to lower level control loops, for example an attitude controller that is responsible for keeping your drone level, you will start seeing cases where you can have a gain that is too low and results in your drone falling out of the sky!**
 
 ## Inner Loop Controller ##
 
@@ -160,24 +164,13 @@ def velocity_controller(self, vel_cmd, vel)
     return pitch_cmd, roll_cmd, thrust_cmd
 ```
 
-### Choosing an Initial Gain ###
-
-We are commanding attitude in radians so this is a little harder intuitively, but let's for a moment pretend we are working with degrees (and then we will adjust for the fact that we did our back of the envelope calculation in degrees).
-
-Once again, let's look at what the attitude command profile looks like as our velocity error changes:
-
-Again we can see that maybe starting with a smaller value (around XXX) may be a safer bet than starting with too large of a value.
-
-**It is worth mentioning that in both of these cases there really wasn't such a thing as too small of a value, worse case your crazyflie was just not going anywhere but it still stayed airborne.  When it comes to lower level control loops, for example an attitude controller that is responsible for keeping your drone level, you will start seeing cases where you can have a gain that is too low and results in your drone falling out of the sky!**
-
 ## Flying Trajectories ##
 
-Now that we have a controller and it is flying simply waypoint missions, let's look at extending it to flying trajectories.
+Now that we have a controller and it is flying simply waypoint missions, the next area of interest is flying trajectories, which is an area we have helped set up but will be leaving for you to explore!
 
-For this, we have provided a framework for reading in a trajectory file (see below for the file format) and a sample figure 8 trajectory.
+We have provided a framework for reading in a trajectory file (see below for the file format) and a sample very simple straight line and back trajectory.  In addition you will find a `trajectory_flyer.py` file that contains the necessary class and script to test it out.
 
-See how well your controller flies through the trajectory!  You may find that you might need some additional tuning or changing of your velocity limits in order to fly the trajectory the best.
-
+Go ahead and give it a try!  You should see the same performance you saw with the straight line waypoint sets that are found in the `velocity_flyer.py` and `attitude_flyer.py` files.  This is not unsurprising as if you look at the trajectory file itself, it is just about the same information.
 
 ### Trajectory File Format ###
 
@@ -191,14 +184,21 @@ A trajectory file, as currently defined by the handler class, is a text file wit
 
 ### Further Challenges ###
 
-We've provided you with one simple trajectory that you can feel free to try out, but now it is up to you to explore the limits that you can take your crazyflie!
+While the trajectory file we have provided you is a very simple one, it should be enough to get you started in the right direction to further explore the world of trajectories and explore the limits that you can take your crazyflie!
 
-For those of you who are ambitious, here are some ideas of how you might be able to extend the code provided:
+To get you started, here are some small modifications ideas to get a feel for how trajectories can be of use:
 
- - **Create your own trajectory files.**  How quickly can you get your crazyflie to fly a given trajectory?  How tight of turns, or how complex of trajectories can your controller handle?
+ - **Dynamic flights speeds.**  Using the same idea of a simple line, can you modify your trajectory file to do the return trip twice as quickly?  How about starting and ending slowly but going quickly in the middle?
+
+ - **Altitude variation.**  Can you have your crazyflie fly a pattern such as a sine wave in height while flying the line?  Or how about always climbing quickly but descending slowly?
+
+For those of you who are really ambitious, here are some ideas of how you might be able to extend the code provided:
+
+ - **Create your own complex trajectory files.**  How about flying a figure 8?  How quickly can you get your crazyflie to fly a given trajectory?  How tight of turns, or how complex of trajectories can your controller handle?
 
  - **Add attitude information to trajectory.**  Extend the trajectory handler and the file format to include attitude to each trajectory point.  Can you successfully achieve specific attitudes at specific times during the flight?
 
+*Note: As you make more complicated trajectories, you may find that you will need to retune your controller to get the best performance you can out of the crazyflie.*
 
 ## Single Controller Option ##
 
@@ -212,7 +212,7 @@ Instead of building it as two parts, it is possible to build the entire controll
 attitude_cmd = KpPos * (pos_cmd - pos) + KpVel * (vel_cmd - vel)
 ```
 
-If we are not flying a trajectory, we set `vel_cmd = 0`, which means that we are constatly damping our control based on how fast we are currently traveling.  This structure ends up being a little more like a PD controller on position, but we are still directly measuring velocity instead of differentiating position.  Note that with this structure, we can't directly limit the velocity command that is created, we can only limit the attitude command.
+If we are not flying a trajectory, we set `vel_cmd = 0`, which means that we are constantly damping our control based on how fast we are currently traveling.  This structure ends up being a little more like a PD controller on position, but we are still directly measuring velocity instead of differentiating position.  Note that with this structure, we can't directly limit the velocity command that is created, we can only limit the attitude command.
 
 For this one, we won't be walking through what the solution looks like directly, but rather leaving it up to you to play around with the controller and see what happens!
 
